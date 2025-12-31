@@ -1,9 +1,9 @@
 import React from 'react';
 import { color, motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import Squares from './SquareBackground';
+import Squares from '../react-bits/SquareBackground';
 import { useNavigate } from "react-router-dom";
-import TextType from './TextType';
+import TextType from '../react-bits/TextType';
 
 const LoginSelector = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const LoginSelector = () => {
             src="/logo5.png"
             alt="HackStream Logo"
             className="w-44 h-44 md:w-52 md:h-52 object-contain relative z-10"
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", marginBottom: "-40px" }}
             onClick={() => navigate("/")}
             initial={{
               filter: "drop-shadow(0 0 30px rgba(168,85,247,0.4))",
