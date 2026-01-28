@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
+
+  const [formData, setFormData] = useState({
+    teamid: "",
+    email: "",
+    password: ""
+  });
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberEmail");
@@ -16,10 +24,28 @@ const Login = () => {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Login successful!");
+
+    try {
+      const res = await axios.post("http://localhost:5000/login", {
+        teamid: formData.teamid,
+        password: formData.password
+      });
+
+      // 🔥 SAVE TEAM SESSION
+      localStorage.setItem(
+        "hackstreamUser",
+        JSON.stringify(res.data.user)
+      );
+
+      navigate("/dashboard");
+
+    } catch (err) {
+      alert(err.response?.data?.error || "Login failed");
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white flex items-center justify-center p-4 relative overflow-hidden">
@@ -85,7 +111,11 @@ const Login = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. TEAM-1024"
+                  value={formData.teamid}
+                  onChange={(e) =>
+                    setFormData({ ...formData, teamid: e.target.value })
+                  }
+                  placeholder="e.g. HMS52226"
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl
                              py-2.5 pl-10 pr-3 outline-none
                              focus:border-purple-500 focus:bg-purple-500/5
@@ -104,6 +134,10 @@ const Login = () => {
                 <input
                   type="email"
                   required
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="team@hack.com"
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl
                              py-2.5 pl-10 pr-3 outline-none
@@ -123,6 +157,10 @@ const Login = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   placeholder="••••••••"
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl
                              py-2.5 pl-10 pr-10 outline-none
@@ -147,30 +185,19 @@ const Login = () => {
                   onClick={() => setRememberMe(!rememberMe)}
                   whileTap={{ scale: 0.9 }}
                   className={`w-4 h-4 rounded border flex items-center justify-center
-                    transition-colors duration-200
-                    ${rememberMe
-                      ? 'bg-purple-600 border-purple-500'
-                      : 'bg-white/5 border-white/20'}`}
+                    ${rememberMe ? 'bg-purple-600 border-purple-500' : 'bg-white/5 border-white/20'}`}
                 >
                   {rememberMe && (
-                    <motion.svg
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </motion.svg>
+                    <svg className="w-3 h-3 text-white" viewBox="0 0 24 24">
+                      <path fill="none" stroke="currentColor" strokeWidth="3" d="M5 13l4 4L19 7" />
+                    </svg>
                   )}
                 </motion.div>
                 <span className="text-sm text-gray-400">Remember me</span>
               </label>
-              <span className="text-xs text-purple-400 hover:underline cursor-pointer">Forgot password?</span>
+              <span className="text-xs text-purple-400 hover:underline cursor-pointer">
+                Forgot password?
+              </span>
             </div>
 
             {/* LOGIN BUTTON */}
@@ -179,16 +206,12 @@ const Login = () => {
               whileTap={{ scale: 0.97 }}
               type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600
-                         py-3 rounded-xl font-bold
-                         shadow-lg shadow-purple-500/25
-                         hover:shadow-purple-500/40
-                         transition-all"
+                         py-3 rounded-xl font-bold shadow-lg shadow-purple-500/25"
             >
               Login
             </motion.button>
           </form>
 
-          {/* Footer */}
           <p className="text-center text-gray-500 text-sm mt-4">
             New team?{" "}
             <Link to="/register" className="text-purple-400 hover:underline font-medium">

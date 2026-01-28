@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, School, Lock, ChevronRight } from 'lucide-react';
+import { Mail, Phone, Lock, ChevronRight } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
-const AdminLogin = () => {
-
+const JudgeLogin = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -19,46 +18,47 @@ const AdminLogin = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // 🔹 Logic only (UI untouched)
   const validate = () => {
     let newErrors = {};
-    if (formData.contactNumber.length !== 10)
-      newErrors.phone = 'Enter a valid 10-digit number';
     if (formData.password.length < 8)
       newErrors.password = 'Password must be at least 8 characters';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validate()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
 
-  try {
-    const res = await fetch("http://localhost:8000/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: formData.email,
-        contactNumber: formData.contactNumber,
-        password: formData.password,
-      }),
-    });
+    try {
+      const res = await fetch("http://localhost:5000/judge/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
       const data = await res.json();
-        if (res.ok) {
-          navigate("/admin/dashboard");
-        } else {
-          alert(data.error || "Login failed");
-        }
-      } catch {
-        alert("Backend not responding");
-      }
-    };
+      console.log("LOGIN RESPONSE:", data);
 
+      if (res.ok) {
+        localStorage.setItem("judge_id", data.judge_id);
+        navigate("/judge");
+      }
+      else {
+        alert(data.error || "Invalid credentials");
+      }
+    } catch {
+      alert("Backend not responding");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      
+
       {/* Background Glow */}
       <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
 
@@ -68,7 +68,7 @@ const AdminLogin = () => {
         className="w-full max-w-lg z-10"
       >
 
-        {/* LOGO SECTION (MOVED UP) */}
+        {/* LOGO */}
         <div className="flex flex-col items-center -mt-8 mb-0">
           <div className="relative">
             <div className="absolute inset-0 bg-purple-500/20 blur-[50px] rounded-full" />
@@ -81,7 +81,7 @@ const AdminLogin = () => {
           </div>
         </div>
 
-        {/* FORM CARD (SMALLER + PRO TOUCH OVERLAP) */}
+        {/* FORM CARD */}
         <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08]
                         rounded-[2.2rem] p-6 md:p-8 shadow-2xl 
                         max-w-md mx-auto -mt-10">
@@ -89,7 +89,7 @@ const AdminLogin = () => {
           {/* Header */}
           <div className="mb-6 text-center">
             <h2 className="text-2xl font-bold tracking-tight">
-              Admin Login
+              Judge Login
             </h2>
             <p className="text-gray-400 mt-1 text-sm">
               Start your journey with HackStream today.
@@ -100,7 +100,7 @@ const AdminLogin = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Email + Contact */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
 
               {/* Email */}
               <div className="space-y-1">
@@ -119,29 +119,6 @@ const AdminLogin = () => {
                                py-3.5 pl-12 pr-4 focus:border-purple-500
                                focus:bg-purple-500/5 outline-none transition-all
                                placeholder-gray-600"
-                  />
-                </div>
-              </div>
-
-              {/* Contact */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">
-                  Contact
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                  <input
-                    type="tel"
-                    name="contactNumber"
-                    required
-                    placeholder="10-digit number"
-                    onChange={handleChange}
-                    className={`w-full bg-white/[0.05] border rounded-xl
-                                py-3.5 pl-12 pr-4 outline-none transition-all
-                                placeholder-gray-600
-                                ${errors.phone
-                                  ? 'border-red-500'
-                                  : 'border-white/10 focus:border-purple-500'}`}
                   />
                 </div>
               </div>
@@ -187,16 +164,7 @@ const AdminLogin = () => {
             >
               Enter HackStream <ChevronRight size={18} />
             </motion.button>
-            {/* Login as Judge */}
-            <div className="text-center mt-4 text-sm text-gray-400">
-              Login as{" "}
-              <span
-                onClick={() => navigate("/judgelogin")}
-                className="text-purple-500 font-semibold cursor-pointer hover:text-purple-400 transition-colors"
-              >
-                Judge
-              </span>
-            </div>
+
           </form>
         </div>
       </motion.div>
@@ -204,4 +172,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default JudgeLogin;

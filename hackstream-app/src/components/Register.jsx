@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, School, Lock, ChevronRight, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import axios from "axios";
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     leaderName: '',
+    teamName: '',      // ✅ NEW
     email: '',
     contactNumber: '',
     college: '',
     password: '',
     confirmPassword: ''
-  });
+});
+
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -34,12 +37,33 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validate()) {
-      alert(`Account created for ${formData.leaderName}!`);
-    }
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!validate()) return;
+
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/signup",
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    alert(`Account created for ${formData.leaderName}!`);
+    console.log(res.data);
+
+    // optional redirect
+    navigate("/login");
+
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.error || "Signup failed");
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -114,6 +138,26 @@ const Register = () => {
                 />
               </div>
             </div>
+
+            <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">Team Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <input
+                    type="text"
+                    name="teamName"
+                    required
+                    placeholder="Your Team Name"
+                    onChange={handleChange}
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl
+                              py-2 pl-10 pr-4 focus:border-purple-500
+                              focus:bg-purple-500/5 outline-none transition-all
+                              placeholder-gray-600 text-sm"
+                  />
+                </div>
+              </div>
+
+            
 
             {/* Email + Contact */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

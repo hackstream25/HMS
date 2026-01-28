@@ -1,0 +1,23 @@
+.page {
+  padding: 30px;
+}
+
+.card {
+  background: rgba(255,255,255,0.04);
+  padding: 20px;
+  border-radius: 18px;
+  margin-bottom: 20px;
+}
+
+.card.draft {
+  opacity: 0.7;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.success {
+  color: #22c55e;
+}
