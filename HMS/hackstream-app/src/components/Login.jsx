@@ -28,24 +28,29 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:5000/login", {
-        teamid: formData.teamId,
-        password: formData.password
-      });
-
-      // 🔥 SAVE TEAM SESSION
-      localStorage.setItem(
-        "hackstreamUser",
-        JSON.stringify(res.data.user)
+      const res = await axios.post(
+        "http://localhost:5000/login",
+        {
+          teamId: formData.teamid.trim(),   // ✅ FIXED
+          password: formData.password       // ✅ FIXED
+        },
+        { withCredentials: true }
       );
 
-      navigate("/dashboard");
+      // Save user session
+      localStorage.setItem("user", JSON.stringify(res.data));
 
+      if (rememberMe) {
+        localStorage.setItem("rememberEmail", formData.email);
+      } else {
+        localStorage.removeItem("rememberEmail");
+      }
+
+      navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.error || "Login failed");
     }
   };
-
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-white flex items-center justify-center p-4 relative overflow-hidden">
@@ -82,11 +87,8 @@ const Login = () => {
             src="/logo5.png"
             alt="HackStream Logo"
             className="w-32 h-32 md:w-36 md:h-36 object-contain relative z-10"
-            style={{ cursor: "pointer" }}
-            onClick={() => window.location.href = "/"}
-            initial={{ filter: "drop-shadow(0 0 20px rgba(168,85,247,0.4))" }}
-            whileHover={{ scale: 1.1, filter: "drop-shadow(0 0 30px rgba(0,212,255,0.5))" }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            onClick={() => navigate("/")}
+            whileHover={{ scale: 1.1 }}
           />
         </div>
 
@@ -103,7 +105,7 @@ const Login = () => {
 
             {/* TEAM ID */}
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase ml-1">
                 Team ID
               </label>
               <div className="relative mt-1">
@@ -115,18 +117,15 @@ const Login = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, teamid: e.target.value })
                   }
-                  placeholder="e.g. HMS52226"
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl
-                             py-2.5 pl-10 pr-3 outline-none
-                             focus:border-purple-500 focus:bg-purple-500/5
-                             placeholder-gray-600 text-sm"
+                             py-2.5 pl-10 pr-3 outline-none"
                 />
               </div>
             </div>
 
             {/* EMAIL */}
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase ml-1">
                 Email
               </label>
               <div className="relative mt-1">
@@ -138,18 +137,15 @@ const Login = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  placeholder="team@hack.com"
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl
-                             py-2.5 pl-10 pr-3 outline-none
-                             focus:border-purple-500 focus:bg-purple-500/5
-                             placeholder-gray-600 text-sm"
+                             py-2.5 pl-10 pr-3 outline-none"
                 />
               </div>
             </div>
 
             {/* PASSWORD */}
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase ml-1">
                 Password
               </label>
               <div className="relative mt-1">
@@ -161,64 +157,29 @@ const Login = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  placeholder="••••••••"
                   className="w-full bg-white/[0.05] border border-white/10 rounded-xl
-                             py-2.5 pl-10 pr-10 outline-none
-                             focus:border-purple-500 focus:bg-purple-500/5
-                             placeholder-gray-600 text-sm"
+                             py-2.5 pl-10 pr-10 outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2
-                             text-gray-400 hover:text-white transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            {/* Remember + Forgot */}
-            <div className="flex items-center justify-between mt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <motion.div
-                  onClick={() => setRememberMe(!rememberMe)}
-                  whileTap={{ scale: 0.9 }}
-                  className={`w-4 h-4 rounded border flex items-center justify-center
-                    ${rememberMe ? 'bg-purple-600 border-purple-500' : 'bg-white/5 border-white/20'}`}
-                >
-                  {rememberMe && (
-                    <svg className="w-3 h-3 text-white" viewBox="0 0 24 24">
-                      <path fill="none" stroke="currentColor" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </motion.div>
-                <span className="text-sm text-gray-400">Remember me</span>
-              </label>
-              <span className="text-xs text-purple-400 hover:underline cursor-pointer">
-                Forgot password?
-              </span>
-            </div>
-
-            {/* LOGIN BUTTON */}
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600
-                         py-3 rounded-xl font-bold shadow-lg shadow-purple-500/25"
+                         py-3 rounded-xl font-bold"
             >
               Login
             </motion.button>
           </form>
-
-          <p className="text-center text-gray-500 text-sm mt-4">
-            New team?{" "}
-            <Link to="/register" className="text-purple-400 hover:underline font-medium">
-              Create account
-            </Link>
-          </p>
-
         </div>
       </motion.div>
     </div>

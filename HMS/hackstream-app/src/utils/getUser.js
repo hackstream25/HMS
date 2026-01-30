@@ -1,4 +1,7 @@
 export const getUser = () => {
-  const data = localStorage.getItem("hackstreamUser");
-  return data ? JSON.parse(data) : null;
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch {
+    return null;
+  }
 };

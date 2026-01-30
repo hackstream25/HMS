@@ -1,31 +1,47 @@
 from flask import Blueprint, request, jsonify
 from db import get_db_connection
+from datetime import datetime
 
-submission_bp = Blueprint("submission", __name__)
+submission = Blueprint("submission", __name__)
 
-@submission_bp.route("/api/submissions", methods=["POST"])
+@submission.route("/submission", methods=["POST"])
 def submit_project():
-    data = request.json
+    data = request.get_json()
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+    teamid = data.get("teamid")
+    title = data.get("title")
+    description = data.get("description")
+    problem_statement = data.get("problem_statement")
+    tech_stack = data.get("tech_stack")
+    github_link = data.get("github_link")
+    demo_link = data.get("demo_link")
+    video_link = data.get("video_link")
 
-    cur.execute("""
-        INSERT INTO submissions
-        (teamid, teamname, title, description, techstack, github, demo)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-    """, (
-        data["teamid"],
-        data["teamname"],
-        data["title"],
-        data["description"],
-        data["techStack"],
-        data["github"],
-        data["demo"]
-    ))
+    if not teamid:
+        return jsonify({"error": "Team ID missing"}), 400
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    return jsonify({"status": "submitted"}), 201
+        cur.execute("""
+            INSERT INTO submissions
+            (teamid, title, description, problem_statement, tech_stack,
+             github_link, demo_link, video_link,
+             status, submitted_at)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'SUBMITTED',%s)
+        """, (
+            teamid, title, description, problem_statement, tech_stack,
+            github_link, demo_link, video_link,
+            datetime.now()
+        ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"status": "success"}), 200
+
+    except Exception as e:
+        print("SUBMISSION ERROR:", e)
+        return jsonify({"error": "Submission failed"}), 500

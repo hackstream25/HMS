@@ -21,8 +21,9 @@ import Countdown from "./pages/Countdown";
 import Submission from "./pages/Submission";
 import Resources from "./pages/Resources";
 import LiveStatus from "./pages/LiveStatus";
-import Projects from "./pages/Projects";
 import Results from "./pages/Results";
+import Announcements from "./pages/Announcements";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -47,8 +48,9 @@ function App() {
         <Route path="submission" element={<Submission />} />
         <Route path="resources" element={<Resources />} />
         <Route path="status" element={<LiveStatus />} />
-        <Route path="projects" element={<Projects />} />
         <Route path="results" element={<Results />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="announcements" element={<Announcements />} />
       </Route>
 
     </Routes>

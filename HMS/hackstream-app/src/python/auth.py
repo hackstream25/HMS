@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app,session
 from db import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 import random, datetime as date
@@ -62,40 +62,37 @@ def signup():
 # ---------------- USER LOGIN ----------------
 @auth.route("/login", methods=["POST"])
 def login():
-    data = request.json
+    data = request.get_json()
 
-    teamid = data.get("teamid")
+    teamid = data.get("teamId")
     password = data.get("password")
 
     if not teamid or not password:
         return jsonify({"error": "Missing credentials"}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    db = get_db_connection()
+    cur = db.cursor(dictionary=True)
 
-    cursor.execute(
-        "SELECT * FROM user WHERE teamid=%s",
-        (teamid,)
-    )
-    user = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
+    cur.execute("SELECT * FROM user WHERE teamid=%s", (teamid,))
+    user = cur.fetchone()
 
     if not user:
         return jsonify({"error": "Invalid Team ID"}), 401
 
     if not check_password_hash(user["password"], password):
-        return jsonify({"error": "Invalid password"}), 401
+        return jsonify({"error": "Invalid Password"}), 401
+
+    # ✅ SESSION (NOW SAFE)
+    session.clear()
+    session["teamid"] = user["teamid"]
+    session["team_name"] = user["team_name"]
+    session["leader"] = user["name"]
 
     return jsonify({
         "status": "success",
-        "user": {
-            "teamid": user["teamid"],
-            "teamName": user["team_name"],
-            "leaderName": user["name"],
-            "email": user["email"]
-        }
+        "teamId": user["teamid"],
+        "teamName": user["team_name"],
+        "leader": user["name"]
     }), 200
 
 
