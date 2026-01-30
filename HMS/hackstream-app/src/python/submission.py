@@ -45,3 +45,31 @@ def submit_project():
     except Exception as e:
         print("SUBMISSION ERROR:", e)
         return jsonify({"error": "Submission failed"}), 500
+    
+@submission.route("/submission/status/<teamid>", methods=["GET"])
+def check_submission_status(teamid):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        cur.execute(
+            "SELECT status FROM submissions WHERE teamid=%s",
+            (teamid,)
+        )
+        result = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "submitted": True,
+                "status": result["status"]
+            }), 200
+
+        return jsonify({"submitted": False}), 200
+
+    except Exception as e:
+        print("STATUS CHECK ERROR:", e)
+        return jsonify({"error": "Failed"}), 500
+

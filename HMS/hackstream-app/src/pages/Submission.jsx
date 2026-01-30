@@ -24,8 +24,11 @@ export default function Submission() {
     if (!teamId) return;
 
     axios
-      .get(`http://localhost:5000/submission/status/${teamId}`)
-      .then(res => setSubmitted(res.data.submitted));
+      .get(`http://localhost:5000/submission/status/${teamId}`, {
+        withCredentials: true
+      })
+      .then(res => setSubmitted(res.data.submitted))
+      .catch(err => console.error(err));
   }, [teamId]);
 
   const handleChange = e => {

@@ -7,29 +7,35 @@ import { getUser } from "../utils/getUser";
 
 export default function Dashboard() {
   const user = getUser();
+  const teamId = user?.teamId;
+
   const [data, setData] = useState(null);
   const [submissionStatus, setSubmissionStatus] = useState("Pending");
 
   useEffect(() => {
-    if (!user?.teamId) return;
+    if (!teamId) return;
 
     // DASHBOARD DATA
     axios
-      .get(`http://localhost:5000/dashboard/${user.teamId}`, {
+      .get(`http://localhost:5000/dashboard/${teamId}`, {
         withCredentials: true
       })
-      .then((res) => setData(res.data));
+      .then(res => setData(res.data))
+      .catch(err => console.error(err));
 
     // SUBMISSION STATUS
     axios
-      .get(`http://localhost:5000/submission/status/${user.teamId}`)
-      .then((res) => {
+      .get(`http://localhost:5000/submission/status/${teamId}`, {
+        withCredentials: true
+      })
+      .then(res => {
         if (res.data.submitted) {
           setSubmissionStatus("Submitted");
         }
-      });
+      })
+      .catch(err => console.error(err));
 
-  }, [user?.teamId]);
+  }, [teamId]);
 
   if (!data) return null;
 
