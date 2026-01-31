@@ -1,0 +1,236 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { User, Mail, Phone, School, Lock, ChevronRight , ArrowLeft} from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+
+const AdminLogin = () => {
+
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: '',
+    //contactNumber: '',
+    password: ''
+  });
+
+  const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
+
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const validate = () => {
+    let newErrors = {};
+    // if (formData.contactNumber.length !== 10)
+    //   newErrors.phone = 'Enter a valid 10-digit number';
+    if (formData.password.length < 8)
+      newErrors.password = 'Password must be at least 8 characters';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setServerError(""); // reset old errors
+
+  if (!validate()) return;
+
+  try {
+    const res = await fetch("http://localhost:5000/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        email: formData.email,
+        //contactNumber: formData.contactNumber,
+        password: formData.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    // ❌ LOGIN FAILED (401, 403, etc.)
+    if (!res.ok) {
+      setServerError(data.message || "Invalid email or password");
+      return;
+    }
+
+    // ✅ LOGIN SUCCESS
+    localStorage.setItem("adminUser", JSON.stringify(data.admin));
+
+    if (data.admin.forcePasswordChange ) {
+      navigate("/admin/change-password");
+    } else {
+      navigate("/admin/dashboard");
+    }
+
+  } catch (err) {
+    setServerError("Server not responding. Try again later.");
+  }
+};
+
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0F] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      
+      {/* Background Glow */}
+      <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg z-10"
+      >
+
+        {/* LOGO SECTION (MOVED UP) */}
+        <div className="flex flex-col items-center -mt-8 mb-0">
+          <div className="relative">
+            <div className="absolute inset-0 bg-purple-500/20 blur-[50px] rounded-full" />
+            <img
+              src="/logo5.png"
+              alt="HackStream Logo"
+              className="w-44 h-44 md:w-52 md:h-52 object-contain relative z-10 
+                         drop-shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+            />
+          </div>
+        </div>
+
+        {/* FORM CARD (SMALLER + PRO TOUCH OVERLAP) */}
+        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08]
+                        rounded-[2.2rem] p-6 md:p-8 shadow-2xl 
+                        max-w-md mx-auto -mt-10">
+
+                          {/* Back Button */}
+<button
+  onClick={() => navigate("/admin-portal")}
+  className="flex items-center gap-2 text-gray-400 hover:text-white
+             text-sm mb-3 transition-colors"
+>
+  <ArrowLeft size={16} />
+  Back
+</button>
+
+
+          {/* Header */}
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Admin Login
+            </h2>
+            <p className="text-gray-400 mt-1 text-sm">
+              Start your journey with HackStream today.
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Email + Contact */}
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="name@company.com"
+                    onChange={handleChange}
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl
+                               py-3.5 pl-12 pr-4 focus:border-purple-500
+                               focus:bg-purple-500/5 outline-none transition-all
+                               placeholder-gray-600"
+                  />
+                </div>
+              </div>
+
+              {/* Contact */}
+              {/* <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">
+                  Contact
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <input
+                    type="tel"
+                    name="contactNumber"
+                    required
+                    placeholder="10-digit number"
+                    onChange={handleChange}
+                    className={`w-full bg-white/[0.05] border rounded-xl
+                                py-3.5 pl-12 pr-4 outline-none transition-all
+                                placeholder-gray-600
+                                ${errors.phone
+                                  ? 'border-red-500'
+                                  : 'border-white/10 focus:border-purple-500'}`}
+                  />
+                </div>
+              </div> */}
+            {/* </div> */}
+
+            {/* Password */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  placeholder="••••••••"
+                  onChange={handleChange}
+                  className={`w-full bg-white/[0.05] border rounded-xl
+                              py-3.5 pl-12 pr-4 outline-none transition-all
+                              placeholder-gray-600
+                              ${errors.password
+                                ? 'border-red-500'
+                                : 'border-white/10 focus:border-purple-500'}`}
+                />
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-[10px] ml-1">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            {serverError && (
+  <motion.div
+    initial={{ opacity: 0, y: -6 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-red-500/10 border border-red-500/30
+               text-red-400 text-sm rounded-xl px-4 py-3"
+  >
+    {serverError}
+  </motion.div>
+)}
+
+
+            {/* Submit */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600
+                         py-3.5 rounded-xl font-bold flex items-center
+                         justify-center gap-2 shadow-lg shadow-purple-500/20
+                         hover:shadow-purple-500/40 transition-all text-base mt-3"
+            >
+              Enter HackStream <ChevronRight size={18} />
+            </motion.button>
+
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default AdminLogin;

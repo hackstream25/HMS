@@ -1,0 +1,165 @@
+from flask import Blueprint, request, jsonify, current_app
+from db import get_db_connection
+from werkzeug.security import generate_password_hash, check_password_hash
+import random, datetime as date
+from flask import session
+import threading
+from email_utils import send_team_email
+
+auth = Blueprint("auth", __name__)
+
+#---------SIGNUP_________
+@auth.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+
+    name = data.get("leaderName")
+    team_name = data.get("teamName")
+    email = data.get("email")
+    phone = data.get("contactNumber")
+    college = data.get("college")
+    password = data.get("password")
+    confirm_password = data.get("confirmPassword")
+
+    if not all([name, team_name, email, phone, college, password, confirm_password]):
+        return jsonify({"message": "Missing fields"}), 400
+
+    if password != confirm_password:
+        return jsonify({"message": "Passwords do not match"}), 400
+
+    hashed_password = generate_password_hash(password)
+
+    num = random.randint(1000, 9999)
+    year = str(date.datetime.now().year)[-2:]
+    teamid = f"HMS{num}{year}"
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO user
+        (name, team_name, email, number, college, password, teamid, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'APPROVED')
+    """, (name, team_name, email, phone, college, hashed_password, teamid))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    app = current_app._get_current_object()
+    threading.Thread(
+        target=send_team_email,
+        args=(app, email, name, teamid),
+        daemon=True
+    ).start()
+
+    return jsonify({
+        "status": "success",
+        "teamId": teamid,
+        "teamName": team_name
+    }), 201
+
+
+# ---------------- USER LOGIN ----------------
+@auth.route("/login", methods=["POST"])
+def login():
+    data = request.json
+
+    teamid = data.get("teamid")
+    password = data.get("password")
+
+    if not teamid or not password:
+        return jsonify({"error": "Missing credentials"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT * FROM user WHERE teamid=%s",
+        (teamid,)
+    )
+    user = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not user:
+        return jsonify({"error": "Invalid Team ID"}), 401
+
+    if not check_password_hash(user["password"], password):
+        return jsonify({"error": "Invalid password"}), 401
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "teamid": user["teamid"],
+            "teamName": user["team_name"],
+            "leaderName": user["name"],
+            "email": user["email"]
+        }
+    }), 200
+
+
+# ---------------- ADMIN LOGIN ----------------
+@auth.route("/admin/login", methods=["POST"])
+def admin_login():
+    data = request.get_json()
+
+    email = data.get("email")
+    
+    password = data.get("password")
+
+    if not email  or not password:
+        return jsonify({"message": "Missing fields"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, name, email, password, role, force_password_change
+        FROM admin
+        WHERE email=%s  AND status='ACTIVE'
+    """, (email, ))
+
+    admin = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not admin:
+        return jsonify({"message": "Admin not found"}), 401
+
+    if not check_password_hash(admin["password"], password):
+        return jsonify({"message": "Invalid password"}), 401
+
+    session["admin_id"] = admin["id"]
+    session["role"] = admin["role"]
+
+    return jsonify({
+        "status": "success",
+        "admin": {
+            "name": admin["name"],
+            "email": admin["email"],
+            "role": admin["role"],
+            "forcePasswordChange": admin["force_password_change"]
+        }
+    }), 200
+
+@auth.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"success": True}), 200
+
+
+
+
+# @auth.route("/admin/me", methods=["GET"])
+# def admin_me():
+#     if "admin_id" not in session:
+#         return jsonify({"error": "Unauthorized"}), 401
+
+#     return jsonify({
+#         "id": session["admin_id"],
+#         "role": session["role"]
+#     }), 200
+
+
