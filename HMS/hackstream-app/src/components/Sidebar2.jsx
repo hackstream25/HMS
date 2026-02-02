@@ -42,6 +42,7 @@ export default function Sidebar2() {
           ["Countdown", Clock, "/dashboard/countdown"],
           ["Project Submission", Upload, "/dashboard/submission"],
           ["Resources", Folder, "/dashboard/resources"],
+          ["Timeline", Folder, "/dashboard/timeline"],
           ["Live Status", Activity, "/dashboard/status"],
           ["Results", Trophy, "/dashboard/results"],
           ["Announcements", Megaphone, "/dashboard/announcements"],

@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 from db import get_db_connection
+import json
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -8,25 +9,36 @@ def get_dashboard(team_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Team basic info
+    # TEAM INFO + TEAM MEMBERS (FROM USER TABLE)
     cursor.execute("""
-        SELECT teamid, team_name, name AS leader_name, status
+        SELECT 
+            teamid,
+            team_name,
+            name AS leader_name,
+            status,
+            team_members
         FROM user
         WHERE teamid = %s
     """, (team_id,))
     team = cursor.fetchone()
 
-    # Members count
-    cursor.execute("""
-        SELECT COUNT(*) AS members
-        FROM team_members
-        WHERE teamid = %s
-    """, (team_id,))
-    members = cursor.fetchone()
+    # MEMBERS COUNT (leader + members array)
+    members_count = 1
+    team_members_list = []
+
+    if team and team["team_members"]:
+        team_members_list = json.loads(team["team_members"])
+        members_count += len(team_members_list)
 
     conn.close()
 
     return jsonify({
-        "team": team,
-        "members": members["members"]
+        "team": {
+            "teamid": team["teamid"],
+            "team_name": team["team_name"],
+            "leader_name": team["leader_name"],
+            "status": team["status"],
+            "team_members": team_members_list
+        },
+        "members": members_count
     })

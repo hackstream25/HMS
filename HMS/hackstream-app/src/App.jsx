@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import Countdown from "./pages/Countdown";
 import Submission from "./pages/Submission";
 import Resources from "./pages/Resources";
+import Timeline from "./pages/Timeline"
 import LiveStatus from "./pages/LiveStatus";
 import Results from "./pages/Results";
 import Announcements from "./pages/Announcements";
@@ -47,6 +48,7 @@ function App() {
         <Route path="countdown" element={<Countdown />} />
         <Route path="submission" element={<Submission />} />
         <Route path="resources" element={<Resources />} />
+        <Route path="timeline" element={<Timeline />} />
         <Route path="status" element={<LiveStatus />} />
         <Route path="results" element={<Results />} />
         <Route path="settings" element={<Settings />} />
